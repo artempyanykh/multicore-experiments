@@ -24,56 +24,28 @@ let rec fib n =
 
 let is_debug = false
 
-module Worker = struct
-  type t = {pid: int; out_ch: out_channel}
-
-  let worker_loop in_chan =
-    let pid = Unix.getpid () in
-    Format.printf "Worker %d start@." pid;
-    let rec go () =
-      let msg: msg = Marshal.from_channel in_chan in
-      if is_debug then Format.printf "Worker %d recv'd a task@." pid;
-      ( match msg with
-        | Quit ->
-           Format.printf "Worker %d done@." (Unix.getpid ());
-           exit 0
-        | Calc n ->
-           fib n |> ignore;
-           go ()
-      )
-    in go ()
-
-  let mk () =
-    let in_fd, out_fd = Unix.pipe () in
-    let pid = Unix.fork () in
-    if pid = 0 then
-      ( Unix.close out_fd;
-        let in_ch = Unix.in_channel_of_descr in_fd in
-        worker_loop in_ch |> ignore;
-        failwith "Unreachable")
-    else
-      ( Unix.close in_fd;
-        let out_ch = Unix.out_channel_of_descr out_fd in
-        {pid; out_ch} )
-
-  let send (msg: msg) {pid; out_ch} =
-    Marshal.to_channel out_ch msg [];
-    flush out_ch;
-    if is_debug then Format.printf "Sent a task to worker %d@." pid
-
-  let wait {pid} =
-    Unix.waitpid [] pid |> ignore
-end
+let worker_loop chan () =
+  let pid = (Domain.self () :> int) in
+  Format.printf "Worker %d start@." pid;
+  let rec go () =
+    let msg = Chan.recv chan in
+    if is_debug then Format.printf "Worker %d recv'd a task@." pid;
+    ( match msg with
+      | Quit ->
+         Format.printf "Worker %d done@." pid;
+         ()
+      | Calc n ->
+         fib n |> ignore;
+         go ()
+    )
+  in go ()
 
 let () =
   let n_workers = 4 in
-  let workers = List.init n_workers (fun _ -> Worker.mk ()) |> Array.of_list in
-  List.iter (fun t ->
-      let wn = Random.int n_workers in
-      let w = workers.(wn) in
-      Worker.send (Calc t) w
-    ) tasks;
-  Array.iter (fun w -> Worker.send Quit w) workers;
-  Array.iter (fun w -> Worker.wait w) workers;
+  let chan = Chan.make_unbounded () in
+  let workers = List.init n_workers (fun _ -> Domain.spawn (worker_loop chan)) |> Array.of_list in
+  List.iter (fun t -> Chan.send chan (Calc t)) tasks;
+  List.init n_workers (fun _ -> Chan.send chan Quit) |> ignore;
+  Array.iter (fun w -> Domain.join w) workers;
   Printf.printf "Main done";
   ()

@@ -1,0 +1,4 @@
+(executable
+ (name domain_queue)
+ (modules domain_queue)
+ (libraries domainslib))
