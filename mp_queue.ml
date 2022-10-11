@@ -1,14 +1,14 @@
 (* Multi-processing *)
 
 let is_debug = false
-let volume = try int_of_string Sys.argv.(1) with _ -> 1
+let volume = try int_of_string Sys.argv.(1) with _ -> 42
 
 (* Generate a list that looks like this for n = 4: [1; 1; 1; 1; 2; 2; 2; 3; 3; 4] *)
 let tasks =
   List.init volume (fun i ->
       let n = volume - i in
       List.init n (fun _ -> i + 1))
-  |> List.flatten
+  |> List.flatten |> Array.of_list
 
 type msg = Calc of int | Quit
 
@@ -59,7 +59,7 @@ let () =
   let workers = Array.init n_workers (fun _ -> Worker.mk ()) in
   let seed = 42 in
   Random.init seed;
-  List.iter
+  Array.iter
     (fun t ->
       let wn = Random.int n_workers in
       let w = workers.(wn) in
@@ -67,5 +67,5 @@ let () =
     tasks;
   Array.iter (fun w -> Worker.send w Quit) workers;
   Array.iter (fun w -> Worker.wait w) workers;
-  Printf.printf "Main done";
+  Format.printf "Main done@.";
   ()
