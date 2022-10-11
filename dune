@@ -1,4 +1,26 @@
 (executable
+ (name domain_simple)
+ (modules domain_simple))
+
+(executable
+ (name domain_latch)
+ (modules domain_latch))
+
+(executable
+ (name domain_atomic)
+ (modules domain_atomic))
+
+(executable
+ (name mp_queue)
+ (modules mp_queue)
+ (libraries unix))
+
+(executable
  (name domain_queue)
  (modules domain_queue)
+ (libraries domainslib))
+
+(executable
+ (name domain_pool)
+ (modules domain_pool)
  (libraries domainslib))
