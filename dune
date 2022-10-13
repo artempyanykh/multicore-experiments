@@ -7,6 +7,10 @@
  (modules domain_latch))
 
 (executable
+ (name domain_false_sharing)
+ (modules domain_false_sharing))
+
+(executable
  (name domain_atomic)
  (modules domain_atomic))
 
