@@ -3,6 +3,7 @@
 open Domainslib
 
 let is_debug = false
+let progname = Sys.argv.(0)
 let volume = try int_of_string Sys.argv.(1) with _ -> 42
 
 (* Generate a list that looks like this for n = 4: [1; 1; 1; 1; 2; 2; 2; 3; 3; 4] *)
@@ -22,15 +23,19 @@ module Worker = struct
   let worker_loop chan () =
     let pid = (Domain.self () :> int) in
     Format.printf "Worker %d start@." pid;
+    let out_name = Format.sprintf "%s-%d.txt" progname pid in
+    let out_chan = open_out out_name in
     let rec go n_done =
       let msg = Chan.recv chan in
       if is_debug then Format.printf "Worker %d recv'd a task@." pid;
       match msg with
       | Quit ->
+          flush out_chan;
+          close_out out_chan;
           Format.printf "Worker %d done %d tasks@." pid n_done;
           ()
       | Calc n ->
-          fib n |> ignore;
+          fib n |> Printf.fprintf out_chan "%d\n";
           go (n_done + n)
     in
     go 0
