@@ -17,14 +17,17 @@
 (executable
  (name mp_queue)
  (modules mp_queue)
- (libraries unix))
+ (libraries unix)
+ (ocamlopt_flags (:standard "-O3")))
 
 (executable
  (name domain_queue)
  (modules domain_queue)
- (libraries domainslib))
+ (libraries domainslib)
+ (ocamlopt_flags (:standard "-O3")))
 
 (executable
  (name domain_pool)
  (modules domain_pool)
- (libraries domainslib))
+ (libraries domainslib)
+ (ocamlopt_flags (:standard "-O3")))
