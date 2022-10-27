@@ -21,8 +21,20 @@
  (ocamlopt_flags (:standard "-O3")))
 
 (executable
+ (name mp_queue_tr)
+ (modules mp_queue_tr)
+ (libraries unix)
+ (ocamlopt_flags (:standard "-O3")))
+
+(executable
  (name domain_queue)
  (modules domain_queue)
+ (libraries domainslib)
+ (ocamlopt_flags (:standard "-O3")))
+
+(executable
+ (name domain_queue_tr)
+ (modules domain_queue_tr)
  (libraries domainslib)
  (ocamlopt_flags (:standard "-O3")))
 
